@@ -1,9 +1,10 @@
 import express from "express";
+import path from "path";
 
 const router = express.Router();
 
 router.get("/", (req, res) => {
-  res.send("Home page");
+  res.sendFile(path.resolve(__dirname, "../../../index.html"));
 });
 router.get("/about", (req, res) => {
   res.send("About page");

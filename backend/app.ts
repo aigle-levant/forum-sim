@@ -1,22 +1,32 @@
 import express from "express";
-import dashboard from "./src/routes/dashboard.ts";
-import auth from "./src/routes/auth.ts";
-import publicRoute from "./src/routes/publicRoute.ts";
-import dotenv from "dotenv";
-dotenv.config();
+import cors from "cors";
+import path from "path";
+import dashboard from "./src/routes/dashboard";
+import auth from "./src/routes/auth";
+import publicRoute from "./src/routes/publicRoute";
+
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
-const port = process.env.PORT || 3000;
 
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 app.use(express.json());
 
-// use defined routes
 app.use("/auth", auth);
 app.use("/dashboard", dashboard);
 app.use("/public", publicRoute);
 
-app.listen(port, () => {
-  console.log(`Server runs on port ${port}!`);
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../index.html"));
 });
 
 export default app;

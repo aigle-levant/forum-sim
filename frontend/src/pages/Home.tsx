@@ -1,8 +1,3 @@
-import axios from "axios";
-import { useEffect } from "react";
+// components
 
-export default function Home() {
-  useEffect(() => {
-    axios.get("");
-  }, []);
-}
+export default function Home() {}
