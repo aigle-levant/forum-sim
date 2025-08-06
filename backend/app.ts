@@ -4,9 +4,11 @@ const cors = require("cors");
 const path = require("path");
 const rateLimit = require("express-rate-limit");
 // files
-import dashboard from "./src/routes/dashboard";
-import auth from "./src/routes/auth";
-import publicRoute from "./src/routes/publicRoute";
+const dashboard = require("./src/routes/dashboard");
+const auth = require("./src/routes/auth");
+const publicRoute = require("./src/routes/publicRoute");
+// types
+import { Request, Response } from "express";
 
 // global rate limiter
 const globalLimit = rateLimit({
@@ -18,7 +20,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: "https://forum-sim.vercel.app/",
     credentials: true,
   })
 );
@@ -34,4 +36,4 @@ app.get("*", (req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, "../index.html"));
 });
 
-export default app;
+module.exports = app;

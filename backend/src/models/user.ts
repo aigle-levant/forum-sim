@@ -1,6 +1,8 @@
 const bcrypt = require("bcrypt");
-const isEmail = require("validator");
+const { isEmail } = require("validator");
 const mongoose = require("mongoose");
+import type { Document, Schema as SchemaType } from "mongoose";
+import type { NextFunction } from "express";
 
 // globals
 const SALT = 10;
@@ -34,11 +36,24 @@ const userSchema = new Schema({
   lockUntil: Number,
 });
 
-userSchema.virtual("isLocked").get(function () {
+// document
+interface IUser extends Document {
+  email: string;
+  password: string;
+  name?: string;
+  loginAttempts: number;
+  lockUntil?: number;
+  isLocked?: boolean;
+
+  comparePassword(password: string): Promise<boolean>;
+  incrementLoginAttempts(): Promise<void>;
+}
+
+userSchema.virtual("isLocked").get(function (this: IUser): boolean {
   return !!(this.lockUntil && this.lockUntil > Date.now());
 });
 
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function (this: IUser, next: NextFunction) {
   // dont hash if not modified
   // hash only if modified
   if (!this.isModified("password")) {
@@ -58,12 +73,13 @@ userSchema.pre("save", async function (next) {
 
 // password verification
 userSchema.methods.comparePassword = async function (
+  this: IUser,
   password: string
 ): Promise<boolean> {
   return bcrypt.compare(password, this.password);
 };
 
-userSchema.methods.loginAttempts = async function () {
+userSchema.methods.incrementLoginAttempts = async function (this: IUser) {
   // check if timeout's gone
   if (this.lockUntil && this.lockUntil < Date.now()) {
     // reset attempts

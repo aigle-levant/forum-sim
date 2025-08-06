@@ -1,11 +1,21 @@
 // modules
-const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const { Request, Response } = require("express");
+const jwt = require("jsonwebtoken");
 // files
 const { User } = require("../models/User");
+// types
+import type { Request, Response } from "express";
 
-export const register = async (req: Request, res: Response) => {
+interface jwtUser {
+  userId: string;
+}
+
+interface authReq extends Request {
+  user?: jwtUser;
+}
+
+// register
+const register = async (req: Request, res: Response) => {
   try {
     const { email, password, name } = req.body;
 
@@ -23,12 +33,14 @@ export const register = async (req: Request, res: Response) => {
     await newbie.save();
 
     res.status(201).json({ message: "User registered successfully!" });
-  } catch {
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Registration failed" });
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+// login
+const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
@@ -64,4 +76,29 @@ export const login = async (req: Request, res: Response) => {
   } catch {
     res.status(500).json({ error: "Login failed" });
   }
+};
+
+// get the damn profile
+const getUserProfile = async (req: authReq, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    const userId = req.user.userId;
+    const user = await User.findById(userId).select("-password");
+    // if the user isnt found, say user not found
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.status(200).json({ user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+};
+
+module.exports = {
+  register,
+  login,
+  getUserProfile,
 };
