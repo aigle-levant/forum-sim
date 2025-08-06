@@ -1,10 +1,10 @@
-import { isEmail } from "validator";
-import bcrypt from "bcrypt";
-import mongoose from "mongoose";
+const bcrypt = require("bcrypt");
+const isEmail = require("validator");
+const mongoose = require("mongoose");
 
-// hard-coded vars
+// globals
 const SALT = 10;
-const MAX_LOGIN_ATTEMPTS = 5;
+const MAX_LOGIN_ATTEMPTS = 3;
 const LOCK_UNTIL = 2 * 60 * 60 * 1000;
 
 // user schema
@@ -31,7 +31,11 @@ const userSchema = new Schema({
   },
   // if login attempts exceeded
   // lock until a certain no. of days
-  lockUtil: Number,
+  lockUntil: Number,
+});
+
+userSchema.virtual("isLocked").get(function () {
+  return !!(this.lockUntil && this.lockUntil > Date.now());
 });
 
 userSchema.pre("save", async function (next) {
@@ -40,31 +44,42 @@ userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     return next();
   }
-  // generate salt for hashing
-  bcrypt.genSalt(SALT, function (err, salt) {
-    if (err) {
-      return next(err);
-    }
+  try {
+    // generate salt for hashing
+    const salt = await bcrypt.genSalt(SALT);
     // hash password with new salt
-    bcrypt.hash(this.password, salt, function (err, hash) {
-      if (err) {
-        return next(err);
-      }
-      // replace password with hashed password
-      this.password = hash;
-      next();
-    });
-  });
+    // also replace password with hashed password
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (err) {
+    next(err);
+  }
 });
 
 // password verification
-userSchema.methods.comparePassword = function (password, cb) {
-  bcrypt.compare(password, this.password, function (err, isMatch) {
-    if (err) {
-      return cb(err);
-    }
-    cb(null, isMatch);
-  });
+userSchema.methods.comparePassword = async function (
+  password: string
+): Promise<boolean> {
+  return bcrypt.compare(password, this.password);
 };
 
-export default mongoose.model("User", userSchema);
+userSchema.methods.loginAttempts = async function () {
+  // check if timeout's gone
+  if (this.lockUntil && this.lockUntil < Date.now()) {
+    // reset attempts
+    this.loginAttempts = 1;
+    this.lockUntil = undefined;
+  } else {
+    this.loginAttempts++;
+  }
+
+  // three and yer out
+  if (this.loginAttempts >= MAX_LOGIN_ATTEMPTS && !this.isLocked) {
+    this.lockUntil = Date.now() + LOCK_UNTIL;
+  }
+  await this.save();
+};
+
+const User = mongoose.model("User", userSchema);
+
+module.exports = { User };

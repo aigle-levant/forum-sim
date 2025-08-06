@@ -1,4 +1,5 @@
-import { auth } from "express-openid-connect";
+// modules
+const auth = require("express-openid-connect");
 
 const config = {
   authRequired: false,

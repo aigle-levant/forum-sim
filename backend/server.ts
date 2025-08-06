@@ -1,7 +1,7 @@
-import dotenv from "dotenv";
+const dotenv = require("dotenv");
+dotenv.config({ path: ".env" });
 import app from "./app";
 
-dotenv.config({ path: ".env" });
 const port = process.env.PORT || 3000;
 
 app.listen(port, () => {
