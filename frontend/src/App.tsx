@@ -1,12 +1,11 @@
 import { Routes, Route } from "react-router-dom";
-import "./App.css";
-import Home from "./pages/Home.tsx";
-import About from "./pages/About.tsx";
-import Dashboard from "./pages/Dashboard.tsx";
-import Auth from "./pages/Auth.tsx";
-import Contact from "./pages/Contact.tsx";
-import NotFound from "./pages/NotFound.tsx";
-import Default from "./layout/Default.tsx";
+import Home from "./pages/Home";
+import About from "./pages/About";
+import Dashboard from "./pages/Dashboard";
+import Auth from "./pages/Auth";
+import Contact from "./pages/Contact";
+import NotFound from "./pages/NotFound";
+import Default from "./layout/Default";
 
 function App() {
   return (

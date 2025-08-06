@@ -1,5 +1,5 @@
 // components
-import HeroCard from "./HeroCard.tsx";
+import HeroCard from "./HeroCard";
 
 export default function Hero() {
   return (
